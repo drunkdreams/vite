@@ -14,7 +14,7 @@ Vite 是一个有态度的 web 开发构建工具，在本地开发时使用原�
 
 ## 状态
 
-目前在beta阶段, 预计很快发布1.0版本.
+目前在beta阶段, 预计很快发布1.0版本。
 
 ## 快速开始
 
@@ -76,8 +76,7 @@ Vite 假设你的代码运行在现代浏览器上，默认将会使用 `es2019`
 - [Production Build](#production-build)
 - [Modes and Environment Variables](#modes-and-environment-variables)
 
-Vite tries to mirror the default configuration in [vue-cli](http://cli.vuejs.org/) as much as possible. If you've used `vue-cli` or other webpack-based boilerplates before, you should feel right at home. That said, do expect things to be different here and there.
-Vite 尽可能的尝试镜像使用 [vue-cli](http://cli.vuejs.org/) 的默认配置。如果你之前使用过 `vue-cli` 或者其他基于 `Webpack` 的模版项目，你应该会非常熟悉这些。这意味着
+Vite 尽可能的尝试复用 [vue-cli](http://cli.vuejs.org/) 的默认配置。如果你之前使用过 `vue-cli` 或者其他基于 `Webpack` 的模版项目，你应该会非常熟悉这些。这意味着不要期望在这里和那里会有什么不同。
 
 ### Bare Module Resolving
 
@@ -87,13 +86,13 @@ Vite 尽可能的尝试镜像使用 [vue-cli](http://cli.vuejs.org/) 的默认�
 import { createApp } from 'vue'
 ```
 
-这种写法默认将会抛出错误。Vite 会检测到本地所有 `.js` 文件，并且重写他们的路径例如 `/@modules/vue`。 在这种路径下，Vite 将会从你安装的依赖中正确的解析执行模块。
+这种写法默认将会抛出错误。Vite 会检测到当前服务中的所有 `.js` 文件，并且重写他们的路径例如 `/@modules/vue`。 在这种路径下，Vite 将会从你安装的依赖中正确的解析执行模块。
 
 对于 `vue` 这个依赖则有着特殊的处理。如果你没有在项目的本地依赖中安装，Vite 将会回退到它自身的依赖版本。这意味着如果你全局安装了 Vite, 它将更快的找到 Vue 实例而不需要在本地安装依赖。
 
 ### Hot Module Replacement
 
-- The `vue`, `react` and `preact` templates of `create-vite-app` all come with HMR out of the box.
+- `vue` `react` 以及 `preact` 模版已经在 `create-vite-app` 集成了热替换功能可以开箱即用
 
 - 为了手动的控制热替换功能, 可以使用该 API `import.meta.hot`.
 
@@ -110,7 +109,7 @@ import { createApp } from 'vue'
   }
   ```
 
-  A module can also accept updates from direct dependencies without reloading itself, using `import.meta.hot.acceptDeps`:
+  一个模块同样能够接收到来自其他模块的更新通知而不需要重新加载。可以使用 `import.meta.hot.acceptDeps`：
 
   ```js
   import { foo } from './foo.js'
@@ -119,18 +118,18 @@ import { createApp } from 'vue'
 
   if (import.meta.hot) {
     import.meta.hot.acceptDeps('./foo.js', (newFoo) => {
-      // the callback receives the updated './foo.js' module
+      // 回调函数将会在 './foo.js' 被更新时触发
       newFoo.foo()
     })
 
-    // Can also accept an array of dep modules:
+    // 同样我们可以接受一个数组
     import.meta.hot.acceptDeps(['./foo.js', './bar.js'], ([newFooModule, newBarModule]) => {
-      // the callback receives the updated modules in an Array
+      // 回调函数将会在这个数组中的模块被更新时触发
     })
   }
   ```
 
-  A self-accepting module, or a module that expects to be accepted by others can use `hot.dispose` to cleanup any persistent side effects created by its updated copy:
+  接收自身更新通知的模块或者接收来自其他模块更新通知的模块可以使用 `hot.dispose` 来清理一些更新过程中产生的副作用
 
   ```js
   function setupSideEffect() {}
@@ -144,69 +143,69 @@ import { createApp } from 'vue'
   }
   ```
 
-  For the full API, consult [hmr.d.ts](https://github.com/vitejs/vite/blob/master/hmr.d.ts).
+  完整的API可以查看 [hmr.d.ts](https://github.com/vitejs/vite/blob/master/hmr.d.ts).
 
   Note that Vite's HMR does not actually swap the originally imported module: if an accepting module re-exports imports from a dep, then it is responsible for updating those re-exports (and these exports must be using `let`). In addition, importers up the chain from the accepting module will not be notified of the change.
 
-  This simplified HMR implementation is sufficient for most dev use cases, while allowing us to skip the expensive work of generating proxy modules.
+  这个简洁的的热替换实现在很多开发场景是足够用的。这使得我们可以跳过昂贵的生成代理模块的过程。
 
 ### TypeScript
 
-Vite supports importing `.ts` files and `<script lang="ts">` in Vue SFCs out of the box.
+Vite 支持在Vue 单文件组件中使用 `<script lang="ts">` 导入 `.ts` 文件。
 
-Vite only performs transpilation on `.ts` files and does **NOT** perform type checking. It assumes type checking is taken care of by your IDE and build process (you can run `tsc --noEmit` in the build script).
+Vite 只进行 `.ts` 文件的转换而不会进行类型检查。它假设类型检查已经在你的 IDE 或者在构建命令中已经被加入进来了(例如你可以在构建脚本中执行 `tsc --noEmit`)。
 
-Vite uses [esbuild](https://github.com/evanw/esbuild) to transpile TypeScript into JavaScript which is about 20~30x faster than vanilla `tsc`, and HMR updates can reflect in the browser in under 50ms.
+Vite 使用 [esbuild](https://github.com/evanw/esbuild) 来转换 TypeScript 到 JavaScript 速度相比 `tsc` 快 20-30倍。 热替换的更新时间在浏览器中将小于50ms。
 
-Note that because `esbuild` only performs transpilation without type information, it doesn't support certain features like const enum and implicit type-only imports. You must set `"isolatedModules": true` in your `tsconfig.json` under `compilerOptions` so that TS will warn you against the features that do not work with isolated transpilation.
+因为 `esbuild` 仅进行转换不附带类型信息。所以它不支持以下功能例如常量枚举以及隐式的类型导入。你必须在 `tsconfig.json` 文件的 `compilerOptions` 选项中设置 `"isolatedModules": true`, 这样 TS 将会警告你这些功能在这个选项下不能被使用。
 
 ### CSS / JSON Importing
 
 You can directly import `.css` and `.json` files from JavaScript (including `<script>` tags of `*.vue` files, of course).
 
-- `.json` files export their content as an object that is the default export.
+- `.json` 文件的内容将会以默认导出的形式导出一个对象
 
-- `.css` files do not export anything unless it ends with `.module.css` (See [CSS Modules](#css-modules) below). Importing them leads to the side effect of them being injected to the page during dev, and being included in the final `style.css` of the production build.
+- `.css` 文件将不会导出任何东西除非它是以 `.module.css` 作为后缀名。(查看 [CSS Modules](#css-modules))。 在开发环境下导入它会产生副作用并且注入到页面当中，在生产环境最终会单独打包为 `style.css` 文件。
 
-Both CSS and JSON imports also support Hot Module Replacement.
+CSS 和 JSON 的导入都支持热替换功能。
 
 ### Asset URL Handling
 
-You can reference static assets in your `*.vue` templates, styles and plain `.css` files either using absolute public paths (based on project root) or relative paths (based on your file system). The latter is similar to the behavior you are used to if you have used `vue-cli` or webpack's `file-loader`.
+你可以在 `*.vue` 模版 styles 标签以及 `.css` 文件中引用静态资源，通过绝对的静态目录路径(基于你的项目根目录) 或者相对路径 (基于当前文件)。后者的行为与你之前在 `vue-cli` 或者webpack的 `file-loader` 的使用方式非常像。
 
-All referenced assets, including those using absolute paths, will be copied to the dist folder with a hashed file name in the production build. Never-referenced assets will not be copied. Similar to `vue-cli`, image assets smaller than 4kb will be base64 inlined.
+所有被引用的资源包括使用绝对路径引用的资源最终都会被复制到打包后的 dist 文件夹当中并且文件名包含 has h值, 没有被引用的文件将不会被复制。与 `vue-cli` 一样，小于 4kb 的图片资源将会以 base64 的形式内联。
 
-All **static** path references, including absolute paths, should be based on your working directory structure.
+所有的静态资源路径引用，包括绝对路径都是基于你当前的工作目录结构。
 
 #### The `public` Directory
 
-The `public` directory under project root can be used as an escape hatch to provide static assets that either are never referenced in source code (e.g. `robots.txt`), or must retain the exact same file name (without hashing).
+项目工程下的 `public` 目录提供不会在源码中引入静态文件资源文件(例如 `robots.txt`), 或者必须保留原始名称的文件(不附带 hash 值)。
 
-Assets placed in `public` will be copied to the root of the dist directory as-is.
+`public` 目录中的文件将会被复制到最终的 dist 文件夹当中。
 
-Note that you should reference files placed in `public` using root absolute path - for example, `public/icon.png` should always be referenced in source code as `/icon.png`.
+如果要引用 `public` 中的文件需要使用绝对路径，例如 `public/icon.png` 文件在源码中的引用方式为 `/icon.png`。
 
 #### Public Base Path
 
-If you are deploying your project under a nested public path, simply specify `--base=/your/public/path/` and all asset paths will be rewritten accordingly.
+如果你的项目以嵌套文件夹的形式发布。可以使用 `--base=/your/public/path/` 选项，这样所有的静态资源的路径会被自动重写。
 
-For dynamic path references, there are two options:
+为了动态的路径引用，这里有两种方式提供
 
-- You can get the resolved public path of a static asset file by importing it from JavaScript. e.g. `import path from './foo.png'` will give you its resolved public path as a string.
+- 你可以获得解析后的静态文件路径通过在 JavaScript 中 导入不它们。例如  `import path from './foo.png'` 将会以字符串的形式返回加载路径。
 
-- If you need to concatenate paths on the fly, you can use the globally injected `import.meta.env.BASE_URL` variable with will be the public base path. Note this variable is statically replaced during build so it must appear exactly as-is (i.e. `import.meta.env['BASE_URL']` won't work).
+- 如果你需要在云端拼接完整的路径，可以使用注入的全局变量 `import.meta.env.BASE_URL` 它的值等于静态资源的基路径。这个变量在构建过程中是静态的，所以它必须以这种方式出现。 (`import.meta.env['BASE_URL']` 将不会生效)
 
 ### PostCSS
 
-Vite automatically applies your PostCSS config to all styles in `*.vue` files and imported plain `.css` files. Just install necessary plugins and add a `postcss.config.js` in your project root.
+Vite 将自动的在 `*.vue` 文件中的所有 styles 标签 以及所有导入的 `.css` 文件中应用 PostCSS。只需要安装必要的插件并且在项目根目录下添加 `postcss.config.js` 配置文件。
 
 ### CSS Modules
 
-Note that you do **not** need to configure PostCSS if you want to use CSS Modules: it works out of the box. Inside `*.vue` components you can use `<style module>`, and for plain `.css` files, you need to name CSS modules files as `*.module.css` which allows you to import the naming hash from it.
+如果你想使用 CSS Modules 你并不需要配置 PostCSS，因为这已经集成好是开箱即用的。在 `*.vue` 组件中你可以使用 `<stype module>`, 在 `.css` 文件中你可以使用 `*.module.css` 的后缀名便可以以带有 hash 值的形式来导入它们。
 
 ### CSS Pre-Processors
 
-Because Vite targets modern browsers only, it is recommended to use native CSS variables with PostCSS plugins that implement CSSWG drafts (e.g. [postcss-nesting](https://github.com/jonathantneal/postcss-nesting)) and author plain, future-standards-compliant CSS. That said, if you insist on using a CSS pre-processor, you can install the corresponding pre-processor and just use it:
+因为 Vite 期望你的代码将会运行在现代浏览器中，所以它建议使用原生的 CSS 变量结合 PostCSS 插件来实现 CSSWG 草案 (例如 [postcss-nesting](https://github.com/jonathantneal/postcss-nesting)) 使其变得简洁以及标准化。这意味着，如果你坚持要使用 CSS 预处理，你需要在本地安装预处理器然后使用。
 
 ```bash
 yarn add -D sass
@@ -218,7 +217,7 @@ yarn add -D sass
 </style>
 ```
 
-Or import them from JavaScript:
+同样也可以在 JS 文件中导入
 
 ```js
 import './style.scss'
@@ -226,9 +225,9 @@ import './style.scss'
 
 #### Passing Options to Pre-Processor
 
-> 1.0.0-beta.9+
-> And if you want to pass options to the pre-processor, you can do that using the `cssPreprocessOptions` option in the config (see [Config File](#config-file) below).
-> For example, to pass some shared global variables to all your Less styles:
+> 要求版本大于等于 1.0.0-beta.9+
+> 如果你需要修改默认预处理器的配置，你可以使用 config 文件中的 `cssPreprocessOptions` 选项(查看 [Config File](#config-file))
+> 例如为你的 less 文件定义一个全局变量
 
 ```js
 // vite.config.js
@@ -247,7 +246,9 @@ module.exports = {
 
 `.jsx` and `.tsx` files are also supported. JSX transpilation is also handled via `esbuild`.
 
-The default JSX configuration works out of the box with Vue 3 (note there is currently no JSX-based HMR for Vue):
+`.jsx` 以及 `.tsx` files 同样是支持的。 JSX 文件同样使用 `esbuild` 来进行转换。
+
+默认与 Vue3 结合的 JSX 配置是开箱即用的 (对 Vue 来说目前还没有针对 JSX 语法的热替换功能)
 
 ```jsx
 import { createApp } from 'vue'
@@ -265,11 +266,13 @@ createApp(App).mount('#app')
 
 Currently this is auto-importing a `jsx` compatible function that converts esbuild-produced JSX calls into Vue 3 compatible vnode calls, which is sub-optimal. Vue 3 will eventually provide a custom JSX transform that can take advantage of Vue 3's runtime fast paths.
 
+同时这种写法将会自动导入与 `jsx` 兼容的函数，esbuild 将会转换 JSX 使其成为与 Vue 3 兼容并且能够在虚拟节点中被调用。Vue 3 最终将提供可利用Vue 3的运行时快速的自定义JSX转换。
+
 #### JSX with React/Preact
 
-There are two other presets provided: `react` and `preact`. You can specify the preset by running Vite with `--jsx react` or `--jsx preact`.
+我们准备了两种方案分别是 `react` 和 `preact`。你可以使用 Vite 执行下列命令来进行方案的选择使用 `--jsx react` or `--jsx preact`。
 
-If you need a custom JSX pragma, JSX can also be customized via `--jsx-factory` and `--jsx-fragment` flags from the CLI or `jsx: { factory, fragment }` from the API. For example, you can run `vite --jsx-factory=h` to use `h` for JSX element creation calls. In the config (see [Config File](#config-file) below), it can be specified as:
+如果你需要一个自定义的 JSX 编译规则，JSX 支持自定义通过在 CLI 中使用 `--jsx-factory` 以及 `--jsx-fragment` 标志。或者使用 API 提供的 `jsx: { factory, fragment }`。例如你可执行 `vite --jsx-factory=h` 来使用 `h` 作为 JSX 元素被创建时候的函数调用。在配置文件中 (参考 [Config File](#config-file)), 可以通过下面的写法来指定。
 
 ```js
 // vite.config.js
@@ -281,13 +284,13 @@ module.exports = {
 }
 ```
 
-Note that for the Preact preset, `h` is also auto injected so you don't need to manually import it. However, this may cause issues if you are using `.tsx` with Preact since TS expects `h` to be explicitly imported for type inference. In that case, you can use the explicit factory config shown above which disables the auto `h` injection.
+在使用 Preact 作为预置的场景下， `h` 已经自动注入在上下文当中，不需要手动的导入。然而这会导致在使用 `.tsx` 结合 Preact 的情况下 TS 为了类型推断期望 `h` 函数能够被显示的导入。在这种情况下，你可以显示的指定 factory 配置来禁止 `h` 函数的自动注入。
 
 ### Web Assembly
 
 > 1.0.0-beta.3+
 
-Pre-compiled `.wasm` files can be directly imported - the default export will be a initialization function that returns a Promise of the exports object of the wasm instance:
+预编译的 `.wasm` 文件能够被直接导入。默认的导出会作为初始化函数返回一个 Promise 对象来导出 wasm 实例对象:
 
 ``` js
 import init from './example.wasm'
@@ -297,7 +300,7 @@ init().then(exports => {
 })
 ```
 
-The init function can also take the `imports` object which is passed along to `WebAssembly.instantiate` as its second argument:
+init 函数也能够获取到 `imports` 对象作为 `WebAssembly.instantiate` 的第二个参数传递。
 
 ``` js
 init({
@@ -307,13 +310,14 @@ init({
 }).then(() => { /* ... */ })
 ```
 
-In the production build, `.wasm` files smaller than `assetInlineLimit` will be inlined as base64 strings. Otherwise they will be copied to the dist directory as an asset and fetched on demand.
+在生产环境构建时，小于 `assetInlineLimit` 大小限制的 `.wasm` 文件将会以 base64 的形式内联。否则将会复制到 dist 文件夹作为静态资源被获取。
 
 ### Inline Web Workers
 
 > 1.0.0-beta.3+
 
-A web worker script can be directly imported by appending `?worker` to the import request. The default export will be a custom worker constructor:
+web worker 脚本能够被直接导入只需要在后面加上 `?workder`。默认的导出是一个自定义的 workder 构造函数。
+
 
 ``` js
 import MyWorker from './worker?worker'
@@ -321,21 +325,21 @@ import MyWorker from './worker?worker'
 const worker = new MyWorker()
 ```
 
-In the production build, workers imported this way are inlined into the bundle as base64 strings.
+在生产环境构建时，workders 将会以 base64 的形式内联。
 
-The worker script can also use `import` statements instead of `importScripts()` - note during dev this relies on browser native support and currently only works in Chrome, but for the production build it is compiled away.
+worker 脚本同样使用 `import` 而不是 `importScripts()`，在开发环境下这依赖于浏览器的原生支持，并且仅在 Chrome 中能够工作，但是生产环境已经被编译过了。
 
-If you do not wish to inline the worker, you should place your worker scripts in `public` and initialize the worker via `new Worker('/worker.js')`.
+如果你不希望内联 worker 脚本，你可以替换你的 workder 脚本到 `public` 文件夹，然后初始化 workder 例如 `new Worker('/worker.js')`
 
 ### Config File
 
-You can create a `vite.config.js` or `vite.config.ts` file in your project. Vite will automatically use it if one is found in the current working directory. You can also explicitly specify a config file via `vite --config my-config.js`.
+你可以在当前项目中创建一个 `vite.config.js` 或者 `vite.config.ts` 文件。Vite 将会自动的使用它。你也可以通过 `vite --config my-config.js` 显式的指定配置文件。
 
-In addition to options mapped from CLI flags, it also supports `alias`, `transforms`, and `plugins` (which is a subset of the config interface). For now, see [config.ts](https://github.com/vuejs/vite/blob/master/src/node/config.ts) for full details before more thorough documentation is available.
+除了在 CLI 映射的选项之外，它也支持 `alias`, `transfroms`, `plugins` (将作为配置接口的子集)选项。在文档完善之前参考 [config.ts](https://github.com/vuejs/vite/blob/master/src/node/config.ts) 来获得更全面的信息。
 
 ### Custom Blocks
 
-[Custom blocks](https://vue-loader.vuejs.org/guide/custom-blocks.html) in Vue SFCs are also supported. To use custom blocks, specify transform functions for custom blocks using the `vueCustomBlockTransforms` option in the [config file](#config-file):
+[自定义区块](https://vue-loader.vuejs.org/guide/custom-blocks.html) 在 Vue 的单文件组件中也是支持的。可以通过 `vueCustomBlockTransforms` 选项来指定自定义区块的转换规则:
 
 ``` js
 // vite.config.js
@@ -350,15 +354,15 @@ module.exports = {
 
 ### HTTPS/2
 
-Starting the server with `--https` will automatically generate a self-signed cert and start the server with TLS and HTTP/2 enabled.
+通过 `--https` 的方式来启动服务将会自动生成自签名的证书。并且服务将会启用 TLS 以及 HTTP/2。
 
-Custom certs can also be provided by using the `httpsOptions` option in the config file, which accepts `key`, `cert`, `ca` and `pfx` as in Node `https.ServerOptions`.
+同样可以通过 `httpsOptions` 选项来自定义签名证书。与 Node 的 `https.ServerOptions` 一样支持接收以下参数 `key`, `cert`, `ca`, `pfx`。
 
 ### Dev Server Proxy
 
-You can use the `proxy` option in the config file to configure custom proxies for the dev server. Vite uses [`koa-proxies`](https://github.com/vagusX/koa-proxies) which in turn uses [`http-proxy`](https://github.com/http-party/node-http-proxy). Each key can be a path Full options [here](https://github.com/http-party/node-http-proxy#options).
+你可以使用配置文件中的 `proxy` 选项来自定义本地开发服务的代理功能。Vite 使用 `koa-proxies`](https://github.com/vagusX/koa-proxies), 它底层使用了[`http-proxy`](https://github.com/http-party/node-http-proxy)。键名可以是一个路径，更多的配置可以查看 [here](https://github.com/http-party/node-http-proxy#options)。
 
-Example:
+用例:
 
 ``` js
 // vite.config.js
@@ -386,25 +390,25 @@ Internally, we use a highly opinionated Rollup config to generate the build. The
 
 ### Modes and Environment Variables
 
-The mode option is used to specify the value of `import.meta.env.MODE` and the corresponding environment variables files that needs to be loaded.
+模式选项用于指定 `import.meta.env.MODE` 的值，同时正确的环境变量文件将会被加载。
 
-By default, there are two modes:
-  - `development` is used by `vite` and `vite serve`
-  - `production` is used by `vite build`
+默认存在两种模式:
+  - `development` 使用于 `vite` 以及 `vite serve`
+  - `production` 使用于 `vite build`
 
-You can overwrite the default mode used for a command by passing the `--mode` option flag. For example, if you want to use development variables in the build command:
+你可以通过 `--mode` 选项来覆盖默认的模式，例如你想以开发模式来进行构建：
 
 ```bash
 vite build --mode development
 ```
 
-When running `vite`, environment variables are loaded from the following files in your project root:
+当执行 `vite` 命令时，环境变量将会从当前目录的以下文件中被加载
 
 ```
-.env                # loaded in all cases
-.env.local          # loaded in all cases, ignored by git
-.env.[mode]         # only loaded in specified env mode
-.env.[mode].local   # only loaded in specified env mode, ignored by git
+.env                # 在任何情况下都被加载
+.env.local          # 在任何情况下都被加载, 会被 git 忽略
+.env.[mode]         # 仅在当前指定的模式下被加载
+.env.[mode].local   # 仅在当前指定的模式下被加载, 会被 git 忽略
 ```
 
 **Note:** only variables prefixed with `VITE_` are exposed to your code. e.g. `VITE_SOME_KEY=123` will be exposed as `import.meta.env.VITE_SOME_KEY`, but `SOME_KEY=123` will not. This is because the `.env` files may be used by some users for server-side or build scripts and may contain sensitive information that should not be exposed in code shipped to browsers.
