@@ -52,7 +52,7 @@ yarn link
 
 ## Browser Support
 
-Vite 在开发环境下依赖原生[ES module imports](https://caniuse.com/#feat=es6-module)。在生产环境构建时依赖动态加载给你来做代码分割 (polyfill实现为[polyfilled](https://github.com/GoogleChromeLabs/dynamic-import-polyfill))
+Vite 在开发环境下依赖原生[ES module imports](https://caniuse.com/#feat=es6-module)。在生产环境构建时依赖动态加载实现代码分割 (polyfill参考[polyfilled](https://github.com/GoogleChromeLabs/dynamic-import-polyfill))
 
 Vite 假设你的代码运行在现代浏览器上，默认将会使用 `es2019` 规范来转换你的代码。(这使得可选链功能在代码压缩后能被使用)。同时你能够手动的在配置选项中指定构建目标版本。最低的版本规范是 `es2015`。
 
@@ -144,8 +144,8 @@ import { createApp } from 'vue'
   ```
 
   完整的API可以查看 [hmr.d.ts](https://github.com/vitejs/vite/blob/master/hmr.d.ts).
-
-  Note that Vite's HMR does not actually swap the originally imported module: if an accepting module re-exports imports from a dep, then it is responsible for updating those re-exports (and these exports must be using `let`). In addition, importers up the chain from the accepting module will not be notified of the change.
+  
+  Vite 的热替换功能并不会交换导入的模块来源。如果一个被接收的模块被重复的导出了，它有责任去更新这些重复的导出(这些导出必须使用 `let`)。另外，接收模块的上游将不会被通知这些变化。(这块尝试写了一些事例验证但是还是无法get到原文想表达的准确意思)
 
   这个简洁的的热替换实现在很多开发场景是足够用的。这使得我们可以跳过昂贵的生成代理模块的过程。
 
@@ -264,8 +264,6 @@ function Child(_, { slots }) {
 createApp(App).mount('#app')
 ```
 
-Currently this is auto-importing a `jsx` compatible function that converts esbuild-produced JSX calls into Vue 3 compatible vnode calls, which is sub-optimal. Vue 3 will eventually provide a custom JSX transform that can take advantage of Vue 3's runtime fast paths.
-
 同时这种写法将会自动导入与 `jsx` 兼容的函数，esbuild 将会转换 JSX 使其成为与 Vue 3 兼容并且能够在虚拟节点中被调用。Vue 3 最终将提供可利用Vue 3的运行时快速的自定义JSX转换。
 
 #### JSX with React/Preact
@@ -382,11 +380,11 @@ module.exports = {
 
 ### Production Build
 
-Vite does utilize bundling for production builds, because native ES module imports result in waterfall network requests that are simply too punishing for page load time in production.
+Vite 在生产环境构建时会进行打包。因为原生的 ES 模块导入在瀑布流网络请求中很容易导致页面的加载时间过长让人难以接受。
 
-You can run `vite build` to bundle the app.
+执行 `vite build` 来打包应用。
 
-Internally, we use a highly opinionated Rollup config to generate the build. The build is configurable by passing on most options to Rollup - and most non-rollup string/boolean options have mapping flags in the CLI (see [build/index.ts](https://github.com/vuejs/vite/blob/master/src/node/build/index.ts) for full details).
+在内部我们使用 Rollup 来生成最终的构建结果。构建配置我们将会透传给 Rollup，一些选项我们可以通过 CLI 来进行透传 (参考 [build/index.ts](https://github.com/vuejs/vite/blob/master/src/node/build/index.ts) 来获得更多信息)。
 
 ### Modes and Environment Variables
 
@@ -411,30 +409,29 @@ vite build --mode development
 .env.[mode].local   # 仅在当前指定的模式下被加载, 会被 git 忽略
 ```
 
-**Note:** only variables prefixed with `VITE_` are exposed to your code. e.g. `VITE_SOME_KEY=123` will be exposed as `import.meta.env.VITE_SOME_KEY`, but `SOME_KEY=123` will not. This is because the `.env` files may be used by some users for server-side or build scripts and may contain sensitive information that should not be exposed in code shipped to browsers.
+只有 `VITE_` 开头的变量会暴露在你的代码中。例如 `VITE_SOME_KEY=123` 将会暴露在 `import.meta.env.VITE_SOME_KEY`。但是 `SOME_KEY=123` 将不会。 因为 `.env` 文件或许会被一些用户在服务端或者构建脚本中使用。有可能包含一些敏感信息不适合出现在浏览器。
 
 ## API
 
 ### Dev Server
 
-You can customize the server using the API. The server can accept plugins which have access to the internal Koa app instance:
+你可以使用这个 API 来自定义本地开发服务。这个服务接受一些插件并且将会注入到 Koa app 实例当中：
 
 ```js
 const { createServer } = require('vite')
 
 const myPlugin = ({
-  root, // project root directory, absolute path
-  app, // Koa app instance
-  server, // raw http server instance
+  root, // 项目根路径，绝对路径
+  app, // Koa app 实例
+  server, // http server 实例
   watcher // chokidar file watcher instance
 }) => {
   app.use(async (ctx, next) => {
-    // You can do pre-processing here - this will be the raw incoming requests
-    // before vite touches it.
+    // 你可以在这里做一些预处理。这些是最原始的请求
+    // 在 vite 接触它之前
     if (ctx.path.endsWith('.scss')) {
-      // Note vue <style lang="xxx"> are supported by
-      // default as long as the corresponding pre-processor is installed, so this
-      // only applies to <link ref="stylesheet" href="*.scss"> or js imports like
+      //  vue <style lang="xxx"> 默认已经被支持只要默认的预处理器被安装
+      // 所以下面的写法仅应用于 <link ref="stylesheet" href="*.scss"> 或者 js imports like
       // `import '*.scss'`.
       console.log('pre processing: ', ctx.url)
       ctx.type = 'css'
@@ -447,9 +444,11 @@ const myPlugin = ({
     // Post processing before the content is served. Note this includes parts
     // compiled from `*.vue` files, where <template> and <script> are served as
     // `application/javascript` and <style> are served as `text/css`.
+    // 在内容被发送之前进行预处理包括以下部分
+    // 编译 `*.vue` 文件，<template> 和 <script> 以 `application/javascript` 的形式托管服务， <style> 以 `text/css` 的形式托管服务
     if (ctx.response.is('js')) {
       console.log('post processing: ', ctx.url)
-      console.log(ctx.body) // can be string or Readable stream
+      console.log(ctx.body) // 可以是字符串或者可读流
     }
   })
 }
@@ -461,7 +460,7 @@ createServer({
 
 ### Build
 
-Check out the full options interface in [build/index.ts](https://github.com/vuejs/vite/blob/master/src/node/build/index.ts).
+获取更全面的选项请查看 [build/index.ts](https://github.com/vuejs/vite/blob/master/src/node/build/index.ts)
 
 ```js
 const { build } = require('vite')
@@ -486,43 +485,45 @@ const { build } = require('vite')
 
 ## How and Why
 
-### How is This Different from `vue-cli` or Other Bundler-based Solutions?
+### 与 `vue-cli` 以及 其他打包工具的区别
 
-The primary difference is that for Vite there is no bundling during development. The ES Import syntax in your source code is served directly to the browser, and the browser parses them via native `<script module>` support, making HTTP requests for each import. The dev server intercepts the requests and performs code transforms if necessary. For example, an import to a `*.vue` file is compiled on the fly right before it's sent back to the browser.
+主要的区别是 Vite 在开发环境下没有打包的过程。源码中的模块的导入语法是服务端直接发送给浏览器运行。浏览器解析它们通过原生的 `<script module>` 支持，对每一个 import 使用 http 请求。本地开发服务将拦截这些请求并进行必要的代码转换。例如 import `*.vue` 文件将会在发送给浏览器之前被编译。
 
-There are a few advantages of this approach:
+通过这种方式处理我们有以下优势:
 
-- Since there is no bundling work to be done, the server cold start is extremely fast.
+- 不需要等待打包，所以冷启动的速度将会非常快
 
-- Code is compiled on demand, so only code actually imported on the current screen is compiled. You don't have to wait until your entire app to be bundled to start developing. This can be a huge difference in apps with dozens of screens.
+- 代码是按需编译的。只有你当前页面实际导入的模块才会被编译。你不需要等待整个应用程序被打包完才能够启动服务。这在有很多页面的应用上体验差别更加巨大。
 
-- Hot module replacement (HMR) performance is decoupled from the total number of modules. This makes HMR consistently fast no matter how big your app is.
+- 热替换的性能将与模块的总数量无关。这将使得热替换变得非常迅速无论你的应用有多大。
 
-Full page reload could be slightly slower than a bundler-based setup, since native ES imports result in network waterfalls with deep import chains. However since this is local development, the difference should be trivial compared to actual compilation time. (There is no compile cost on page reload since already compiled files are cached in memory.)
+整个页面的刷新比起基于工具打包会慢一点。存在很深的导入链的情况下的原生的 ES 模块的导入很容易导致网络瀑布。然而这是本地开发与实际编译相比差别应该不大。(在页面重载时不需要编译，因为编译结果已经缓存在内存中了)
 
-Finally, because compilation is still done in Node, it can technically support any code transforms a bundler can, and nothing prevents you from eventually bundling the code for production. In fact, Vite provides a `vite build` command to do exactly that so the app doesn't suffer from network waterfall in production.
+因为编译是在 Node 中完成的，在技术上我们可以进行任何的代码转换，没有什么可以阻止你捆绑最终打包到生产环境的代码。事实上， Vite 提供了 `vite build` 命令来进行精确的打包让你的应用在生产环境中不会发生网络瀑布。
 
 ### How is This Different from [es-dev-server](https://open-wc.org/developing/es-dev-server.html)?
 
-`es-dev-server` is a great project and we did take some inspiration from it when refactoring Vite in the early stages. That said, here is why Vite is different from `es-dev-server` and why we didn't just implement Vite as a middleware for `es-dev-server`:
+`es-dev-server` 是一个非常好的项目，我们早期设计有很多灵感来自于它。下面是 Vite 和 `es-dev-server` 的区别以及为什么我们不以 `es-dev-server` 中间件的形式来实现 Vite：
 
-- One of Vite's primary goal was to support Hot Module Replacement, but `es-dev-server` internals is a bit too opaque to get this working nicely via a middleware.
+- Vite 的主要目标之一是实现热替换，但是 `es-dev-server` 的内部不是很透明导致无法通过中间件来使其很好的工作
 
-- Vite aims to be a single tool that integrates both the dev and the build process. You can use Vite to both serve and bundle the same source code, with zero configuration.
+- Vite 目标做一个独立的工作同时在开发环境以及构建时使用。你可以无需配置便可以针对同一份源码在开发环境或构建时使用 Vite 
 
-- Vite is more opinionated on how certain types of imports are handled, e.g. `.css` and static assets. The handling is similar to `vue-cli` for obvious reasons.
+- Vite 对处理一些明确类型的导入文件是更加有态度的。例如 `.css` 文件和静态资源。基于上述理由这些处理方式类似于 `vue-cli`
 
 ### How is This Different from [Snowpack](https://www.snowpack.dev/)?
 
-Both Snowpack v2 and Vite offer native ES module import based dev servers. Vite's dependency pre-optimization is also heavily inspired by Snowpack v1. Both projects share similar performance characteristics when it comes to development feedback speed. Some notable differences are:
+Snowpack v2 和 Vite 在本地开发服务都提供了原生 ES 模块的导入。Vite 依赖预优化的灵感也来自于Snowpack v1。在开发反馈速度上面，两个项目非常类似。一些值得注意的不同点如下：
 
-- Vite was created to tackle native ESM-based HMR. When Vite was first released with working ESM-based HMR, there was no other project actively trying to bring native ESM based HMR to production.
+- Vite 被创造出来用于处理基于原生 ES 模块的热替换功能。当 Vite 首次发布能够正常工作的基于原生 ES 模块的热替换功能时，没有其他的项目积极尝试将原生 ES 模块的热替换功能用于生产。
 
-  Snowpack v2 initially did not offer HMR support but added it in a later release, making the scope of two projects much closer. Vite and Snowpack has collaborated on a common API spec for ESM HMR, but due to the constraints of different implementation strategies, the two projects still ship slightly different APIs.
+  Snowpack v2 最初也不支持热替换但是计划在之后的版本提供。这将使得两个项目更加的类似。Vite 和 Snowpack 计划合作针对原生 ES 模块的热替换提供一个通用的 API 规范。但是由于两个项目的内部实现方式的区别，两个项目的 API 仍将会有所区别。
 
-- Both solutions can also bundle the app for production, but Vite uses Rollup with built-in config while Snowpack delegates it to Parcel/webpack via additional plugins. Vite will in most cases build faster and produce smaller bundles. In addition, a tighter integration with the bundler makes it easier to author Vite transforms and plugins that modify dev/build configs at the same.
+- 两个项目的解决方案都是在生产环境进行应用的打包。但是 Vite 使用 Rollup 进行构建，Snowpack 通过插件使用 Parcel/webpack 进行构建。Vite 在很多场景下构建结果是更快并且更小的。另外与打包程序更紧密的结合可以更容易的在开发环境和生产环境配置中修改 Vite 的转换规则以及插件。
 
 - Vue support is a first-class feature in Vite. For example, Vite provides a much more fine-grained HMR integration with Vue, and the build config is fined tuned to produce the most efficient bundle.
+
+- Vite 对 Vue 的支持是一流的。Vite 针对 Vue 提供了更细粒度的热替换功能以及在构建配置上做了调整来生成最有效的打包结果。
 
 ## Contribution
 
